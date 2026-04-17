@@ -1,0 +1,24 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# DDEV (local dev environment)
+.ddev/
+
+# WordPress config with credentials
+public_html/wp-config.php
+public_html/wp-config-ddev.php
+
+# Database dumps
+*.sql
+*.sql.gz
+
+# Uploads (media files too heavy for git)
+public_html/wp-content/uploads/
