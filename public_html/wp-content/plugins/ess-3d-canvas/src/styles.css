@@ -1,0 +1,12 @@
+.ess-3d-canvas {
+  display: block;
+  overflow: hidden;
+  background: transparent !important;
+}
+
+.ess-3d-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
