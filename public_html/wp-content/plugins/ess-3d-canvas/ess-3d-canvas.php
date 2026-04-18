@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('ESS_3D_CANVAS_VERSION', '1.0.1');
+define('ESS_3D_CANVAS_VERSION', '1.0.3');
 define('ESS_3D_CANVAS_PATH', plugin_dir_path(__FILE__));
 define('ESS_3D_CANVAS_URL', plugin_dir_url(__FILE__));
 

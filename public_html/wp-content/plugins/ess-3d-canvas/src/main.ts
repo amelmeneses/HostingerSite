@@ -29,24 +29,24 @@ function getAutoLocation(): Promise<{ lat: number; lng: number }> {
  * Finds Elementor icon-list widgets near the canvas and updates their text.
  */
 function updateHeaderCoords(lat: number, lng: number): void {
-  // The header has two icon-list widgets with items like "Dec: −3°" and "Lat: 2°54'02" S"
-  // We find all icon-list items in the header and match by label prefix
-  const iconListItems = document.querySelectorAll<HTMLElement>(
-    '.elementor-icon-list-text',
+  // The header has two icon-list widgets:
+  //   List 1: Dec / AR
+  //   List 2: Lat / Long (stored as "AR:" but should be "Long:")
+  // We find each list by its container and update by item index.
+  const iconLists = document.querySelectorAll<HTMLElement>(
+    '.elementor-icon-list-items',
   );
 
-  for (const item of iconListItems) {
-    const text = item.textContent?.trim() ?? '';
+  if (iconLists.length >= 2) {
+    // List 1: Dec (item 0), AR (item 1)
+    const list1Items = iconLists[0].querySelectorAll<HTMLElement>('.elementor-icon-list-text');
+    if (list1Items[0]) list1Items[0].textContent = `Dec: ${latToDeclination(lat)}`;
+    if (list1Items[1]) list1Items[1].textContent = `AR: ${lngToRA(lng)}`;
 
-    if (text.startsWith('Dec:')) {
-      item.textContent = `Dec: ${latToDeclination(lat)}`;
-    } else if (text.startsWith('AR:')) {
-      item.textContent = `AR: ${lngToRA(lng)}`;
-    } else if (text.startsWith('Lat:')) {
-      item.textContent = `Lat: ${decimalToDMS(lat, true)}`;
-    } else if (text.startsWith('Long:')) {
-      item.textContent = `Long: ${decimalToDMS(lng, false)}`;
-    }
+    // List 2: Lat (item 0), Long (item 1)
+    const list2Items = iconLists[1].querySelectorAll<HTMLElement>('.elementor-icon-list-text');
+    if (list2Items[0]) list2Items[0].textContent = `Lat: ${decimalToDMS(lat, true)}`;
+    if (list2Items[1]) list2Items[1].textContent = `Long: ${decimalToDMS(lng, false)}`;
   }
 }
 
