@@ -22,9 +22,11 @@ export class LogoRenderer {
   private model: THREE.Group | null = null;
   private pivot: THREE.Group;
   private loader: GLTFLoader;
+  private userScale: number;
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: THREE.Scene, scale = 1) {
     this.pivot = new THREE.Group();
+    this.userScale = scale;
     scene.add(this.pivot);
     this.loader = new GLTFLoader();
   }
@@ -44,7 +46,7 @@ export class LogoRenderer {
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
       if (maxDim > 0) {
-        const fitScale = 1.8 / maxDim;
+        const fitScale = (1.8 * this.userScale) / maxDim;
         this.model.scale.multiplyScalar(fitScale);
       }
 

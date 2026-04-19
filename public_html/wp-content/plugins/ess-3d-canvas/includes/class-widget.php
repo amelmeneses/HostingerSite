@@ -68,6 +68,15 @@ class Widget extends Widget_Base {
             'condition'    => ['mode' => 'auto'],
         ]);
 
+        $this->add_control('logo_scale', [
+            'label'   => 'Logo Scale',
+            'type'    => Controls_Manager::SLIDER,
+            'range'   => [
+                'px' => ['min' => 0.5, 'max' => 3, 'step' => 0.1],
+            ],
+            'default' => ['size' => 1],
+        ]);
+
         $this->add_responsive_control('canvas_width', [
             'label'      => 'Width',
             'type'       => Controls_Manager::SLIDER,
@@ -107,12 +116,14 @@ class Widget extends Widget_Base {
         $lat  = floatval($s['latitude'] ?? 0);
         $lng  = floatval($s['longitude'] ?? 0);
         $update_coords = ($s['update_coords'] ?? '') === 'yes' ? 'true' : 'false';
+        $scale = floatval($s['logo_scale']['size'] ?? 1);
         ?>
         <div class="ess-3d-canvas"
              data-mode="<?php echo $mode; ?>"
              data-lat="<?php echo $lat; ?>"
              data-lng="<?php echo $lng; ?>"
-             data-update-coords="<?php echo $update_coords; ?>">
+             data-update-coords="<?php echo $update_coords; ?>"
+             data-scale="<?php echo $scale; ?>">
         </div>
         <?php
     }

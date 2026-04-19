@@ -9,7 +9,7 @@ export interface SceneContext {
   logo: LogoRenderer;
 }
 
-export function initScene(container: HTMLElement): SceneContext {
+export function initScene(container: HTMLElement, scale = 1): SceneContext {
   const existingCanvas = container.querySelector('canvas');
   if (existingCanvas) existingCanvas.remove();
 
@@ -31,7 +31,7 @@ export function initScene(container: HTMLElement): SceneContext {
 
   scene.add(createLights());
 
-  const logo = new LogoRenderer(scene);
+  const logo = new LogoRenderer(scene, scale);
 
   function animate() {
     requestAnimationFrame(animate);
