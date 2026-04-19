@@ -1,5 +1,5 @@
 import './styles.css';
-import { initScene } from './scene.ts';
+import { initScene, type SceneContext } from './scene.ts';
 import { latLngToRotation } from './geoToRotation.ts';
 import { fetchUserLocation } from './geoDetect.ts';
 import { latToDeclination, lngToRA, decimalToDMS } from './formatters.ts';
@@ -23,6 +23,9 @@ function getAutoLocation(): Promise<{ lat: number; lng: number }> {
   }
   return autoLocationPromise;
 }
+
+/** Store scene contexts so we can replay animations */
+const sceneMap = new WeakMap<HTMLElement, SceneContext>();
 
 /**
  * Update the "YOU ARE HERE" coordinate texts in the header.
@@ -56,13 +59,15 @@ async function initCanvas(el: HTMLElement): Promise<void> {
   const scale = parseFloat(el.dataset.scale || '1') || 1;
 
   const ctx = initScene(el, scale);
+  sceneMap.set(el, ctx);
   await ctx.logo.load();
 
   if (mode === 'manual') {
     const lat = parseFloat(el.dataset.lat || '0');
     const lng = parseFloat(el.dataset.lng || '0');
     const rot = latLngToRotation(lat, lng);
-    ctx.logo.setRotation(rot);
+    // Animate from default position to target rotation
+    ctx.logo.rotateTo(rot);
   } else {
     const loc = await getAutoLocation();
     const rot = latLngToRotation(loc.lat, loc.lng);
@@ -72,6 +77,20 @@ async function initCanvas(el: HTMLElement): Promise<void> {
       updateHeaderCoords(loc.lat, loc.lng);
     }
   }
+}
+
+/** Replay the rotation animation on an already-initialized canvas */
+function replayAnimation(el: HTMLElement): void {
+  const ctx = sceneMap.get(el);
+  if (!ctx) return;
+
+  const lat = parseFloat(el.dataset.lat || '0');
+  const lng = parseFloat(el.dataset.lng || '0');
+  const rot = latLngToRotation(lat, lng);
+
+  // Reset to zero first, then animate to target
+  ctx.logo.setRotation({ x: 0, y: 0, z: 0 });
+  ctx.logo.rotateTo(rot);
 }
 
 function initVisible(): void {
@@ -85,20 +104,27 @@ function initVisible(): void {
 
 /**
  * Watch for accordion items being opened (Elementor nested accordion uses <details>).
- * When a <details> opens, init any uninitialized canvases inside it.
+ * When a <details> opens:
+ *  - If canvas not yet initialized → init it (first open)
+ *  - If already initialized → replay the rotation animation
  */
 function watchAccordions(): void {
   document.addEventListener('toggle', (e) => {
     const details = e.target as HTMLDetailsElement;
     if (!details || details.tagName !== 'DETAILS' || !details.open) return;
 
-    // Small delay to let the accordion animate and get dimensions
     setTimeout(() => {
       const canvases = details.querySelectorAll<HTMLElement>('.ess-3d-canvas');
       canvases.forEach((el) => {
-        initCanvas(el).catch((err) => {
-          console.error('ESS 3D Canvas: init failed', err);
-        });
+        if (el.dataset.essInit === '1') {
+          // Already initialized — replay the animation
+          replayAnimation(el);
+        } else {
+          // First time opening — initialize
+          initCanvas(el).catch((err) => {
+            console.error('ESS 3D Canvas: init failed', err);
+          });
+        }
       });
     }, 100);
   }, true);
