@@ -18,11 +18,20 @@ const ANIMATION = {
   ease: 'power3.inOut',
 } as const;
 
+const HOVER = {
+  maxPitch: 0.26,   // ±15° in radians
+  maxYaw: 0.35,     // ±20° in radians
+  trackDuration: 0.15,
+  returnDuration: 0.6,
+  returnEase: 'power2.out',
+} as const;
+
 export class LogoRenderer {
   private model: THREE.Group | null = null;
   private pivot: THREE.Group;
   private loader: GLTFLoader;
   private userScale: number;
+  private homeRotation: Rotation3D = { x: 0, y: 0, z: 0 };
 
   constructor(scene: THREE.Scene, scale = 1) {
     this.pivot = new THREE.Group();
@@ -83,12 +92,34 @@ export class LogoRenderer {
   }
 
   rotateTo(target: Rotation3D): void {
+    this.homeRotation = { ...target };
     gsap.to(this.pivot.rotation, {
       x: BASE_ROTATION.x + target.x,
       y: BASE_ROTATION.y + target.y,
       z: BASE_ROTATION.z + target.z,
       duration: ANIMATION.duration,
       ease: ANIMATION.ease,
+      overwrite: true,
+    });
+  }
+
+  applyHoverOffset(nx: number, ny: number): void {
+    gsap.to(this.pivot.rotation, {
+      x: BASE_ROTATION.x + this.homeRotation.x + ny * HOVER.maxPitch,
+      y: BASE_ROTATION.y + this.homeRotation.y + nx * HOVER.maxYaw,
+      z: BASE_ROTATION.z + this.homeRotation.z,
+      duration: HOVER.trackDuration,
+      overwrite: true,
+    });
+  }
+
+  returnToHome(): void {
+    gsap.to(this.pivot.rotation, {
+      x: BASE_ROTATION.x + this.homeRotation.x,
+      y: BASE_ROTATION.y + this.homeRotation.y,
+      z: BASE_ROTATION.z + this.homeRotation.z,
+      duration: HOVER.returnDuration,
+      ease: HOVER.returnEase,
       overwrite: true,
     });
   }

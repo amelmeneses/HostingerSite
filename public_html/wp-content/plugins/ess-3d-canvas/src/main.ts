@@ -27,6 +27,26 @@ function getAutoLocation(): Promise<{ lat: number; lng: number }> {
 /** Store scene contexts so we can replay animations */
 const sceneMap = new WeakMap<HTMLElement, SceneContext>();
 
+function attachHoverListeners(el: HTMLElement, ctx: SceneContext): void {
+  // Prevent browser scroll/gestures so touch drag works on the canvas
+  el.style.touchAction = 'none';
+
+  el.addEventListener('pointermove', (e: PointerEvent) => {
+    const rect = el.getBoundingClientRect();
+    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+    ctx.logo.applyHoverOffset(nx, ny);
+  });
+
+  const returnHome = () => ctx.logo.returnToHome();
+
+  // Desktop: mouse leaves the element
+  el.addEventListener('pointerleave', returnHome);
+  // Mobile: finger lifts or touch cancelled
+  el.addEventListener('pointerup', returnHome);
+  el.addEventListener('pointercancel', returnHome);
+}
+
 /**
  * Update the "YOU ARE HERE" coordinate texts in the header.
  */
@@ -60,6 +80,7 @@ async function initCanvas(el: HTMLElement): Promise<void> {
 
   const ctx = initScene(el, scale);
   sceneMap.set(el, ctx);
+  attachHoverListeners(el, ctx);
   await ctx.logo.load();
 
   if (mode === 'manual') {
