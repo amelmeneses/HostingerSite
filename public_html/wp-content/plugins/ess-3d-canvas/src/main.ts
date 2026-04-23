@@ -31,20 +31,47 @@ function attachHoverListeners(el: HTMLElement, ctx: SceneContext): void {
   // Prevent browser scroll/gestures so touch drag works on the canvas
   el.style.touchAction = 'none';
 
-  el.addEventListener('pointermove', (e: PointerEvent) => {
+  let dragging = false;
+
+  const calcOffset = (e: PointerEvent) => {
     const rect = el.getBoundingClientRect();
     const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     const ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
     ctx.logo.applyHoverOffset(nx, ny);
+  };
+
+  // --- Hover (mouse only, no click needed) ---
+  el.addEventListener('pointermove', (e: PointerEvent) => {
+    if (dragging) return; // click-drag takes priority
+    if (e.pointerType !== 'mouse') return;
+    calcOffset(e);
   });
 
-  const returnHome = () => ctx.logo.returnToHome();
+  el.addEventListener('pointerleave', (e: PointerEvent) => {
+    if (dragging) return;
+    if (e.pointerType !== 'mouse') return;
+    ctx.logo.returnToHome();
+  });
 
-  // Desktop: mouse leaves the element
-  el.addEventListener('pointerleave', returnHome);
-  // Mobile: finger lifts or touch cancelled
-  el.addEventListener('pointerup', returnHome);
-  el.addEventListener('pointercancel', returnHome);
+  // --- Click-drag (mouse) / Touch-drag (mobile) ---
+  el.addEventListener('pointerdown', (e: PointerEvent) => {
+    dragging = true;
+    el.setPointerCapture(e.pointerId); // track pointer anywhere on page
+  });
+
+  el.addEventListener('pointermove', (e: PointerEvent) => {
+    if (!dragging) return;
+    calcOffset(e);
+  });
+
+  const stopDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    ctx.logo.returnToHome();
+  };
+
+  el.addEventListener('pointerup', stopDrag);
+  el.addEventListener('pointercancel', stopDrag);
 }
 
 /**
