@@ -110,21 +110,32 @@ async function initCanvas(el: HTMLElement): Promise<void> {
   attachHoverListeners(el, ctx);
   await ctx.logo.load();
 
+  let rot: import('./geoToRotation.ts').Rotation3D;
+
   if (mode === 'manual') {
     const lat = parseFloat(el.dataset.lat || '0');
     const lng = parseFloat(el.dataset.lng || '0');
-    const rot = latLngToRotation(lat, lng);
-    // Animate from default position to target rotation
-    ctx.logo.rotateTo(rot);
+    rot = latLngToRotation(lat, lng);
   } else {
     const loc = await getAutoLocation();
-    const rot = latLngToRotation(loc.lat, loc.lng);
-    ctx.logo.rotateTo(rot);
+    rot = latLngToRotation(loc.lat, loc.lng);
 
     if (shouldUpdateCoords) {
       updateHeaderCoords(loc.lat, loc.lng);
     }
   }
+
+  // Animate when the canvas scrolls into view (not before)
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        ctx.logo.rotateTo(rot);
+        observer.disconnect();
+      }
+    },
+    { threshold: 0 },
+  );
+  observer.observe(el);
 }
 
 /** Replay the rotation animation on an already-initialized canvas */
