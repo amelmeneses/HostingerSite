@@ -1,4 +1,5 @@
 import './styles.css';
+import gsap from 'gsap';
 import { initScene, type SceneContext } from './scene.ts';
 import { latLngToRotation } from './geoToRotation.ts';
 import { fetchUserLocation } from './geoDetect.ts';
@@ -82,15 +83,25 @@ function updateHeaderCoords(lat: number, lng: number): void {
     '.elementor-icon-list-items',
   );
 
-  if (iconLists.length >= 2) {
-    const list1Items = iconLists[0].querySelectorAll<HTMLElement>('.elementor-icon-list-text');
-    if (list1Items[0]) list1Items[0].textContent = `Dec: ${latToDeclination(lat)}`;
-    if (list1Items[1]) list1Items[1].textContent = `AR: ${lngToRA(lng)}`;
+  if (iconLists.length < 2) return;
 
-    const list2Items = iconLists[1].querySelectorAll<HTMLElement>('.elementor-icon-list-text');
-    if (list2Items[0]) list2Items[0].textContent = `Lat: ${decimalToDMS(lat, true)}`;
-    if (list2Items[1]) list2Items[1].textContent = `Long: ${decimalToDMS(lng, false)}`;
-  }
+  const list1Items = iconLists[0].querySelectorAll<HTMLElement>('.elementor-icon-list-text');
+  const list2Items = iconLists[1].querySelectorAll<HTMLElement>('.elementor-icon-list-text');
+
+  const proxy = { lat: 0, lng: 0 };
+
+  gsap.to(proxy, {
+    lat,
+    lng,
+    duration: 1.4,
+    ease: 'power2.out',
+    onUpdate() {
+      if (list1Items[0]) list1Items[0].textContent = `Dec: ${latToDeclination(proxy.lat)}`;
+      if (list1Items[1]) list1Items[1].textContent = `AR: ${lngToRA(proxy.lng)}`;
+      if (list2Items[0]) list2Items[0].textContent = `Lat: ${decimalToDMS(proxy.lat, true)}`;
+      if (list2Items[1]) list2Items[1].textContent = `Long: ${decimalToDMS(proxy.lng, false)}`;
+    },
+  });
 }
 
 async function initCanvas(el: HTMLElement): Promise<void> {
