@@ -7,6 +7,7 @@ export interface SceneContext {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   logo: LogoRenderer;
+  dispose: () => void;
 }
 
 export function initScene(container: HTMLElement, scale = 1): SceneContext {
@@ -33,8 +34,9 @@ export function initScene(container: HTMLElement, scale = 1): SceneContext {
 
   const logo = new LogoRenderer(scene, scale);
 
+  let rafId: number;
   function animate() {
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
     renderer.render(scene, camera);
   }
   animate();
@@ -48,5 +50,12 @@ export function initScene(container: HTMLElement, scale = 1): SceneContext {
   };
   window.addEventListener('resize', onResize);
 
-  return { renderer, scene, camera, logo };
+  const dispose = () => {
+    cancelAnimationFrame(rafId);
+    window.removeEventListener('resize', onResize);
+    renderer.dispose();
+    renderer.domElement.remove();
+  };
+
+  return { renderer, scene, camera, logo, dispose };
 }

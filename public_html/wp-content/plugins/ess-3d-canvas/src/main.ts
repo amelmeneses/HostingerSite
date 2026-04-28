@@ -25,8 +25,8 @@ function getAutoLocation(): Promise<{ lat: number; lng: number }> {
   return autoLocationPromise;
 }
 
-/** Store scene contexts so we can replay animations */
-const sceneMap = new WeakMap<HTMLElement, SceneContext>();
+/** Store scene contexts so we can replay animations and dispose them */
+const sceneMap = new Map<HTMLElement, SceneContext>();
 
 function attachHoverListeners(el: HTMLElement, ctx: SceneContext): void {
   // Prevent browser scroll/gestures so touch drag works on the canvas
@@ -219,6 +219,11 @@ window.addEventListener('elementor/frontend/init', () => {
       () => {
         const elements = document.querySelectorAll<HTMLElement>('.ess-3d-canvas');
         elements.forEach((el) => {
+          const existing = sceneMap.get(el);
+          if (existing) {
+            existing.dispose();
+            sceneMap.delete(el);
+          }
           el.dataset.essInit = '';
         });
         initVisible();
